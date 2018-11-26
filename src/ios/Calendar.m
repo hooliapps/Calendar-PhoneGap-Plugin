@@ -488,6 +488,15 @@
 - (void) listCalendars:(CDVInvokedUrlCommand*)command {
   [self.commandDelegate runInBackground: ^{
     NSArray * calendars = [self.eventStore calendarsForEntityType:EKEntityTypeEvent];
+
+    if (calendars == nil) {
+      CDVPluginResult* pluginResult =
+        [CDVPluginResult resultWithStatus: CDVCommandStatus_ERROR messageAsString:
+          @"Calendars could not be listed. Is access to the Calendar blocked for this app?"];
+      [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+      return;
+    }
+
     NSMutableArray *finalResults = [[NSMutableArray alloc] initWithCapacity:calendars.count];
     for (EKCalendar *thisCalendar in calendars) {
       NSString *type = [[NSArray arrayWithObjects:@"Local", @"CalDAV", @"Exchange", @"Subscription", @"Birthday", @"Mail", nil] objectAtIndex:thisCalendar.type];
