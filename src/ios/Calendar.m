@@ -16,22 +16,16 @@
 }
 
 - (void) initEventStoreWithCalendarCapabilities {
-  __block BOOL accessGranted = NO;
-  EKEventStore* eventStoreCandidate = [[EKEventStore alloc] init];
-  if([eventStoreCandidate respondsToSelector:@selector(requestAccessToEntityType:completion:)]) {
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-    [eventStoreCandidate requestAccessToEntityType:EKEntityTypeEvent completion:^(BOOL granted, NSError *error) {
-      accessGranted = granted;
-      dispatch_semaphore_signal(sema);
-    }];
-    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-  } else { // we're on iOS 5 or older
-    accessGranted = YES;
-  }
+	EKEventStore* eventStoreCandidate = [[EKEventStore alloc] init];
 
-  if (accessGranted) {
-    self.eventStore = eventStoreCandidate;
-  }
+	[eventStoreCandidate requestFullAccessToEventsWithCompletion:^(BOOL granted, NSError *error) {
+		if (granted) {
+			self.eventStore = eventStoreCandidate;
+			NSLog(@"Full access to the event store granted and eventStore initialized.");
+		} else {
+			NSLog(@"Access to the event store not granted. Error: %@", error.localizedDescription);
+		}
+	}];
 }
 
 #pragma mark Helper Functions
@@ -488,15 +482,6 @@
 - (void) listCalendars:(CDVInvokedUrlCommand*)command {
   [self.commandDelegate runInBackground: ^{
     NSArray * calendars = [self.eventStore calendarsForEntityType:EKEntityTypeEvent];
-
-    if (calendars == nil) {
-      CDVPluginResult* pluginResult =
-        [CDVPluginResult resultWithStatus: CDVCommandStatus_ERROR messageAsString:
-          @"Calendars could not be listed. Is access to the Calendar blocked for this app?"];
-      [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-      return;
-    }
-
     NSMutableArray *finalResults = [[NSMutableArray alloc] initWithCapacity:calendars.count];
     for (EKCalendar *thisCalendar in calendars) {
       NSString *type = [[NSArray arrayWithObjects:@"Local", @"CalDAV", @"Exchange", @"Subscription", @"Birthday", @"Mail", nil] objectAtIndex:thisCalendar.type];
