@@ -26,7 +26,7 @@
   __block BOOL accessGranted = NO;
 
   dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-  if (@available(iOS 17.0, *)) {
+  if (@available(iOS 17, *)) {
     [eventStoreCandidate requestFullAccessToEventsWithCompletion:^(BOOL granted, NSError *error) {
       accessGranted = granted;
 
@@ -75,7 +75,7 @@
   __block BOOL accessGranted = NO;
 
   dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-  if (@available(iOS 17.0, *)) {
+  if (@available(iOS 17, *)) {
     [eventStoreCandidate requestWriteOnlyAccessToEventsWithCompletion:^(BOOL granted, NSError *error) {
       accessGranted = granted;
 
